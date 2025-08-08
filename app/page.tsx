@@ -16,6 +16,15 @@ export default function ConfigurableRomanticExperience() {
   const [showAdmin, setShowAdmin] = useState(false)
   const [currentGif, setCurrentGif] = useState('')
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [hasStarted, setHasStarted] = useState(false)
+
+const startExperience = () => {
+  setHasStarted(true)
+  audioRef.current?.play()
+}
+
+
+
     // fetch('http://localhost:4000/get-config')
     //   .then(response => response.json())
     //   .then(data => {
@@ -219,6 +228,15 @@ export default function ConfigurableRomanticExperience() {
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [])
+  if (!hasStarted) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Button onClick={startExperience} className="bg-gradient-to-r from-pink-500 to-red-500 text-white px-8 py-4 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+          Start Romantic Experience 💖
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className={`min-h-screen bg-gradient-to-br ${config.settings.backgroundColor} relative overflow-hidden`}>
@@ -361,8 +379,8 @@ export default function ConfigurableRomanticExperience() {
       {config.settings.enableMusic && (
         <audio
           ref={audioRef}
+          autoPlay={isPlaying}
           loop
-          autoPlay={true}
         >
           <source src="/song.mp3?query=romantic love song" type="audio/mpeg" />
         </audio>
