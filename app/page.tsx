@@ -16,20 +16,35 @@ export default function ConfigurableRomanticExperience() {
   const [showAdmin, setShowAdmin] = useState(false)
   const [currentGif, setCurrentGif] = useState('')
   const canvasRef = useRef<HTMLCanvasElement>(null)
+    // fetch('http://localhost:4000/get-config')
+    //   .then(response => response.json())
+    //   .then(data => {
+    //     if (data) {
+    //       setConfig(data);
+    //     }
+    //   })
+    //   .catch(error => {
+    //     console.error('Error fetching config from server:', error);
+    //   });
   const audioRef = useRef<HTMLAudioElement>(null)
 
-  // Load configuration from localStorage on mount
+  // useEffect(() => {
+  //   fetch('http://localhost:4000/get-config')
+  //     .then(response => response.json())
+  //     .then(data => {
+  //   setCurrentGif(config.gifs[0] || '')
+
+  // })}, [])
+
   useEffect(() => {
-    const savedConfig = localStorage.getItem('romanticConfig')
-    if (savedConfig) {
-      try {
-        const parsedConfig = JSON.parse(savedConfig)
-        setConfig(parsedConfig)
-      } catch (error) {
-        console.error('Error loading saved config:', error)
-      }
-    }
-    setCurrentGif(config.gifs[0] || '')
+    fetch('/api/data/read')
+      .then(res => res.json())
+      .then(json => {
+        if (json.success) {
+          console.log('Fetched config:', json.data[0])
+          setConfig(json.data[0]) // assuming single object row
+        }
+      })
   }, [])
 
   // Update current GIF when config changes
@@ -177,6 +192,19 @@ export default function ConfigurableRomanticExperience() {
     setConfig(newConfig)
     // Reset to beginning with new config
     setCurrentPhase(0)
+
+     // Send the updated config to the server
+     
+    //  fetch('http://localhost:4000/update-config', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({ config: newConfig })
+    // })
+    // .then(response => response.json())
+    // .then(data => console.log(data.message))
+    // .catch(error => console.error('Error updating config:', error));
     setShowHearts(true)
   }
 
@@ -267,7 +295,7 @@ export default function ConfigurableRomanticExperience() {
         {currentPhase === 0 && (
           <div className="text-center animate-pulse">
             <h1 className={`text-2xl md:text-4xl font-bold ${config.settings.textColor} mb-8 animate-bounce`}>
-              {config.phases[0].title}
+              {config.phases[0]?.title}
             </h1>
           </div>
         )}
@@ -334,7 +362,6 @@ export default function ConfigurableRomanticExperience() {
         <audio
           ref={audioRef}
           loop
-          preload="none"
           autoPlay={true}
         >
           <source src="/song.mp3?query=romantic love song" type="audio/mpeg" />
@@ -345,6 +372,7 @@ export default function ConfigurableRomanticExperience() {
       <style jsx>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px); }
+
           to { opacity: 1; transform: translateY(0); }
         }
         

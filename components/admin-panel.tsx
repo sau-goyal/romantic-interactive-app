@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -21,11 +21,35 @@ interface AdminPanelProps {
 export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibility }: AdminPanelProps) {
   const [localConfig, setLocalConfig] = useState<RomanticConfig>(config)
 
-  const handleSave = () => {
+  // const handleSave = () => {
+  //   onConfigChange(localConfig)
+  //   localStorage.setItem('romanticConfig', JSON.stringify(localConfig))
+  //   alert('Configuration saved successfully! 💖')
+  // }
+  const handleSave = async () => {
+  try {
+    await fetch('/api/data/write', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(localConfig),
+    })
     onConfigChange(localConfig)
-    localStorage.setItem('romanticConfig', JSON.stringify(localConfig))
-    alert('Configuration saved successfully! 💖')
+    alert('Configuration saved to Excel! 💖')
+  } catch (error) {
+    console.error('Save failed:', error)
   }
+}
+
+useEffect(() => {
+  fetch('/api/data/read')
+    .then(res => res.json())
+    .then(json => {
+      if (json.success) {
+        setLocalConfig(json.data[0].length>0 ? json.data[0][0] : config) // assuming single object row
+      }
+    })
+}, [])
+
 
   const addPhase = () => {
     setLocalConfig(prev => ({
@@ -106,7 +130,7 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
                   <Label htmlFor="title">Main Title</Label>
                   <Textarea
                     id="title"
-                    value={localConfig.title}
+                    value={localConfig?.title || ''}
                     onChange={(e) => setLocalConfig(prev => ({ ...prev, title: e.target.value }))}
                     className="mt-1"
                   />
@@ -115,7 +139,7 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
                   <Label htmlFor="petName1">Pet Name 1</Label>
                   <Input
                     id="petName1"
-                    value={localConfig.customization.petName1}
+                    value={localConfig?.customization?.petName1 || "Puchka"}
                     onChange={(e) => setLocalConfig(prev => ({
                       ...prev,
                       customization: { ...prev.customization, petName1: e.target.value }
@@ -127,7 +151,7 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
                   <Label htmlFor="petName2">Pet Name 2</Label>
                   <Input
                     id="petName2"
-                    value={localConfig.customization.petName2}
+                    value={localConfig?.customization?.petName2 || "Tuki"}
                     onChange={(e) => setLocalConfig(prev => ({
                       ...prev,
                       customization: { ...prev.customization, petName2: e.target.value }
@@ -139,7 +163,7 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
                   <Label htmlFor="loverName">Lover Name</Label>
                   <Input
                     id="loverName"
-                    value={localConfig.customization.loverName}
+                    value={localConfig?.customization?.loverName || "Meri Laddo"}
                     onChange={(e) => setLocalConfig(prev => ({
                       ...prev,
                       customization: { ...prev.customization, loverName: e.target.value }
@@ -152,7 +176,7 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
                 <Label htmlFor="personalMessage">Personal Message</Label>
                 <Textarea
                   id="personalMessage"
-                  value={localConfig.customization.personalMessage}
+                  value={localConfig?.customization?.personalMessage || "You are my everything! 💖"}
                   onChange={(e) => setLocalConfig(prev => ({
                     ...prev,
                     customization: { ...prev.customization, personalMessage: e.target.value }
@@ -171,7 +195,7 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
                 </Button>
               </div>
               <div className="space-y-4 max-h-96 overflow-y-auto">
-                {localConfig.phases.map((phase, index) => (
+                {localConfig?.phases?.map((phase, index) => (
                   <Card key={index} className="p-4">
                     <div className="flex justify-between items-start mb-2">
                       <span className="font-medium">Phase {index + 1}</span>
@@ -186,25 +210,25 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
                     <div className="space-y-2">
                       <Input
                         placeholder="Title (optional)"
-                        value={phase.title}
+                        value={phase?.title || ''}
                         onChange={(e) => updatePhase(index, 'title', e.target.value)}
                       />
                       <Textarea
                         placeholder="Message"
-                        value={phase.message}
+                        value={phase?.message || ''}
                         onChange={(e) => updatePhase(index, 'message', e.target.value)}
                       />
                       <div className="flex gap-2">
                         <Input
                           type="number"
                           placeholder="Duration (ms)"
-                          value={phase.duration}
+                          value={phase?.duration || ''}
                           onChange={(e) => updatePhase(index, 'duration', parseInt(e.target.value))}
                           className="w-32"
                         />
                         <div className="flex items-center space-x-2">
                           <Switch
-                            checked={phase.showKiss || false}
+                            checked={phase?.showKiss || false}
                             onCheckedChange={(checked) => updatePhase(index, 'showKiss', checked)}
                           />
                           <Label>Show Kiss</Label>
@@ -225,7 +249,7 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
                 </Button>
               </div>
               <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-                {localConfig.gifs.map((gif, index) => (
+                {localConfig?.gifs?.map((gif, index) => (
                   <Card key={index} className="p-2">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm font-medium">GIF {index + 1}</span>
@@ -239,7 +263,7 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
                     </div>
                     <img src={gif || "/placeholder.svg"} alt={`GIF ${index + 1}`} className="w-full h-24 object-cover rounded" />
                     <Input
-                      value={gif}
+                      value={gif || ''}
                       onChange={(e) => setLocalConfig(prev => ({
                         ...prev,
                         gifs: prev.gifs.map((g, i) => i === index ? e.target.value : g)
@@ -257,7 +281,7 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
                   <Label htmlFor="backgroundColor">Background Color Class</Label>
                   <Input
                     id="backgroundColor"
-                    value={localConfig.settings.backgroundColor}
+                    value={localConfig?.settings?.backgroundColor || "from-pink-200 via-pink-300 to-rose-300"}
                     onChange={(e) => setLocalConfig(prev => ({
                       ...prev,
                       settings: { ...prev.settings, backgroundColor: e.target.value }
@@ -269,7 +293,7 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
                   <Label htmlFor="textColor">Text Color Class</Label>
                   <Input
                     id="textColor"
-                    value={localConfig.settings.textColor}
+                    value={localConfig?.settings?.textColor || "text-purple-800"}
                     onChange={(e) => setLocalConfig(prev => ({
                       ...prev,
                       settings: { ...prev.settings, textColor: e.target.value }
@@ -282,7 +306,7 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
                   <Input
                     id="particleCount"
                     type="number"
-                    value={localConfig.settings.particleCount}
+                    value={localConfig?.settings?.particleCount || 50}
                     onChange={(e) => setLocalConfig(prev => ({
                       ...prev,
                       settings: { ...prev.settings, particleCount: parseInt(e.target.value) }
@@ -294,7 +318,7 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
                   <Label htmlFor="floatingEmoji">Floating Emoji</Label>
                   <Input
                     id="floatingEmoji"
-                    value={localConfig.settings.floatingEmoji}
+                    value={localConfig?.settings?.floatingEmoji || "😍"}
                     onChange={(e) => setLocalConfig(prev => ({
                       ...prev,
                       settings: { ...prev.settings, floatingEmoji: e.target.value }
@@ -306,7 +330,7 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
                   <Switch
-                    checked={localConfig.settings.enableMusic}
+                    checked={localConfig?.settings?.enableMusic || true}
                     onCheckedChange={(checked) => setLocalConfig(prev => ({
                       ...prev,
                       settings: { ...prev.settings, enableMusic: checked }
@@ -316,7 +340,7 @@ export function AdminPanel({ config, onConfigChange, isVisible, onToggleVisibili
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch
-                    checked={localConfig.settings.enableFloatingEmojis}
+                    checked={localConfig?.settings?.enableFloatingEmojis || true}
                     onCheckedChange={(checked) => setLocalConfig(prev => ({
                       ...prev,
                       settings: { ...prev.settings, enableFloatingEmojis: checked }
