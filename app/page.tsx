@@ -232,7 +232,7 @@ const startExperience = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Button onClick={startExperience} className="bg-gradient-to-r from-pink-500 to-red-500 text-white px-8 py-4 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-          Click for tuki ka jau 🤤
+          Tuki ka pyar cahiye kya 😘😘😘😘?
         </Button>
       </div>
     )
